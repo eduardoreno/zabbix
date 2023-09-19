@@ -1,2 +1,2 @@
 # zabbix
-Default password Admin/zabbix
+Zabbix default password Admin/zabbix

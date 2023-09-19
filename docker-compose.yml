@@ -1,0 +1,70 @@
+version: '3.7'
+
+volumes:
+  zabbix_database:
+
+services:
+
+  zabbix-db:
+    container_name: zabbix_db
+    image: postgres:14.8-alpine3.18
+    restart: always
+    environment:
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: ${DB_TABLE}
+    volumes:
+      - zabbix_database:/var/lib/postgresql/data
+
+  zabbix-server:
+    container_name: zabbix-server
+    image: zabbix/zabbix-server-pgsql:ubuntu-6.4.3
+    restart: always
+    environment:
+      DB_SERVER_HOST: ${DB_HOST}
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: ${DB_TABLE}
+      ZBX_HISTORYSTORAGETYPES: log,text
+      ZBX_DEBUGLEVEL: 1
+      ZBX_HOUSEKEEPINGFREQUENCY: 1
+      ZBX_MAXHOUSEKEEPERDELETE: 5000
+    volumes:
+      - ./zabbix-server/alertscripts:/usr/lib/zabbix/alertscripts
+      - ./zabbix-server/externalscripts:/usr/lib/zabbix/externalscripts
+    depends_on:
+      - zabbix-db
+
+  zabbix-web:
+    container_name: zabbix-web
+    image: zabbix/zabbix-web-nginx-pgsql:ubuntu-6.4.3
+    restart: always
+    environment:
+      DB_SERVER_HOST: ${DB_HOST}
+      POSTGRES_USER: ${DB_USER}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: ${DB_TABLE}
+      ZBX_SERVER_HOST: ${ZBX_SERVER_HOST}
+      ZBX_POSTMAXSIZE: 64M
+      PHP_TZ: ${TIMEZONE}
+      ZBX_MAXEXECUTIONTIME: 500
+    ports:
+      - 80:8080
+    depends_on:
+      - zabbix-db
+      - zabbix-server
+
+  zabbix-proxy:
+    container_name: zabbix-proxy
+    image: eduardoreno/zabbix-proxy-sqlite3:ubuntu-6.4.3
+    build:
+      context: ./build/
+      dockerfile: zabbix-proxy.Dockerfile
+    restart: always
+    environment:
+      ZBX_HOSTNAME: zabbix-proxy
+      ZBX_PROXYMOD: 0
+      ZBX_SERVER_HOST: ${ZBX_SERVER_HOST}
+      ZBX_ENABLEREMOTECOMMANDS: 1
+    volumes:
+      - ./conf/odbc.ini:/etc/odbc.ini:rw
