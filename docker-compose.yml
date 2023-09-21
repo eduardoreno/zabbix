@@ -66,5 +66,5 @@ services:
       ZBX_PROXYMOD: 0
       ZBX_SERVER_HOST: ${ZBX_SERVER_HOST}
       ZBX_ENABLEREMOTECOMMANDS: 1
-    volumes:
-      - ./conf/odbc.ini:/etc/odbc.ini:rw
+    # volumes:
+    #   - ./conf/odbc.ini:/etc/odbc.ini:rw
