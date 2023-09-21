@@ -67,4 +67,4 @@ services:
       ZBX_SERVER_HOST: ${ZBX_SERVER_HOST}
       ZBX_ENABLEREMOTECOMMANDS: 1
     # volumes:
-    #   - ./conf/odbc.ini:/etc/odbc.ini:rw
+    #   - ./odbc/odbc.ini:/etc/odbc.ini:ro
